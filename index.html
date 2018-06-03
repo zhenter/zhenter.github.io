@@ -1,0 +1,71 @@
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<button id="btn1">查询订阅链接地址</button>
+<br /><br />
+<input type="text" id="dingyue"  style="width:80%"></input>
+<br /><br />
+<button id="btn2">延迟测试</button>
+<div id="pinglist"></div>
+<div id="html"></div>
+</body>
+<script type="text/javascript" src="http://libs.baidu.com/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.rawgit.com/dankogai/js-base64/379d153f/base64.js"></script>
+<script>
+    $.ajaxPrefilter(function (options) {
+        if (options.crossDomain && jQuery.support.cors) {
+            var http = (window.location.protocol === 'http:' ? 'http:' : 'https:');
+            options.url = http + '//cors-anywhere.herokuapp.com/' + options.url;
+            //options.url = "http://cors.corsproxy.io/url=" + options.url;
+        }
+    });
+
+    $("#btn1").click(function(e) {
+	    dingyueurl=$("#dingyue").val();
+		$.get(
+		dingyueurl,
+        function (response) {
+		content=Base64.decode(response);
+		urls=content.split('\n');
+			result="";
+			for (var i=0;i<urls.length-1;i++)
+			{
+			ssr=urls[i].split('://');
+			ssrr=Base64.decode(ssr[1]).split(':');
+			result=result.concat('<div class="nodes">'+ssrr[0]+':'+ssrr[1]+'</div>');
+			}
+        $("#html").append(result);
+        });
+	});
+	$("#btn2").click(function(e) {
+	    var urls=new Array('https://cn-wz-tcping.torch.njs.app/','https://usa-los-tcping.torch.njs.app/','https://cn-sh-tcping.torch.njs.app/');
+		$(".nodes").each(function(){
+		    node=$(this).text().split(":");
+			var html1=$(this);
+			for (var i=0;i<urls.length;i++){
+				(function(i){
+				$.ajax({
+				url:urls[i]+node[0]+'/'+node[1],
+				success:function(data){
+				lc=urls[i].split(".")[0].split("://")[1];
+				if(data["status"]==true)
+				  {
+					html1.append('<span style="background-color: rgb(135, 208, 104);">'+lc+':TRUE</span><span>&nbsp</span>');
+				  }
+				else
+				  {
+					html1.append('<span style="background-color: rgb(255, 85, 0);">'+lc+':Error</span><span>&nbsp</span>');
+				  }
+				},
+				error:function(statusobj,statusTxt,xhr){
+					html1.append('<span style="background-color: rgb(255, 85, 0);">'+lc+':Error:'+statusobj.status+'</span><span>&nbsp</span>');
+					}
+				});
+				})(i);
+			}
+		})
+	});
+</script>
+</html>
